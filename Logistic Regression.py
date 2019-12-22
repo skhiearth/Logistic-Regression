@@ -20,11 +20,30 @@ X_test = sc.transform(X_test)
 
 # Fitting Logistic Regression to the Training set
 from sklearn.linear_model import LogisticRegression
-classifier = LogisticRegression(random_state = 0)
-classifier.fit(X_train, y_train)
+
+train_errs = list()
+valid_errs = list()
+
+C_values = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+
+for C_value in C_values:
+    classifier = LogisticRegression(C=C_value)
+    classifier.fit(X_train, y_train)
+    train_errs.append(1.0 - classifier.score(X_train, y_train))
+    valid_errs.append(1.0 - classifier.score(X_test, y_test))
+    
+plt.semilogx(C_values, train_errs, C_values, valid_errs)
+plt.legend(("Train", "Validation"))
+plt.xlabel('C-value')
+plt.ylabel('Classification error')
+plt.show()
+
+# Finalising the model based on best C-value
+lr = LogisticRegression(C=0.1)
+lr.fit(X_train, y_train)
 
 # Predicting the Test set results
-y_pred = classifier.predict(X_test)
+y_pred = lr.predict(X_test)
 
 # Making the Confusion Matrix
 from sklearn.metrics import confusion_matrix
@@ -35,7 +54,7 @@ from matplotlib.colors import ListedColormap
 X_set, y_set = X_train, y_train
 X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
                      np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
-plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+plt.contourf(X1, X2, lr.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
              alpha = 0.75, cmap = ListedColormap(('red', 'green')))
 plt.xlim(X1.min(), X1.max())
 plt.ylim(X2.min(), X2.max())
@@ -53,7 +72,7 @@ from matplotlib.colors import ListedColormap
 X_set, y_set = X_test, y_test
 X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
                      np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
-plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+plt.contourf(X1, X2, lr.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
              alpha = 0.75, cmap = ListedColormap(('red', 'green')))
 plt.xlim(X1.min(), X1.max())
 plt.ylim(X2.min(), X2.max())
@@ -65,3 +84,6 @@ plt.xlabel('Age')
 plt.ylabel('Estimated Salary')
 plt.legend()
 plt.show()
+
+# Fitting the complete dataset on the model
+lr.fit(X, y)
