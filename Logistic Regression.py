@@ -2,6 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.model_selection import GridSearchCV
 
 # Importing the dataset
 dataset = pd.read_csv('Social_Network_Ads.csv')
@@ -21,26 +22,15 @@ X_test = sc.transform(X_test)
 # Fitting Logistic Regression to the Training set
 from sklearn.linear_model import LogisticRegression
 
-train_errs = list()
-valid_errs = list()
+classifier = LogisticRegression(penalty='l2')
+searcher = GridSearchCV(classifier, {'C':[0.001, 0.01, 0.1, 1, 10, 100, 1000]})
+searcher.fit(X_train, y_train)
 
-C_values = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-
-for C_value in C_values:
-    classifier = LogisticRegression(C=C_value)
-    classifier.fit(X_train, y_train)
-    train_errs.append(1.0 - classifier.score(X_train, y_train))
-    valid_errs.append(1.0 - classifier.score(X_test, y_test))
-    
-plt.semilogx(C_values, train_errs, C_values, valid_errs)
-plt.legend(("Train", "Validation"))
-plt.xlabel('C-value')
-plt.ylabel('Classification error')
-plt.show()
+# Report the best parameters
+print("Best CV params", searcher.best_params_)
 
 # Finalising the model based on best C-value
-lr = LogisticRegression(C=0.1)
-lr.fit(X_train, y_train)
+lr = searcher.best_estimator_
 
 # Predicting the Test set results
 y_pred = lr.predict(X_test)
